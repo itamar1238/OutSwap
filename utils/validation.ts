@@ -262,23 +262,29 @@ export const validateOutfitInput = (
   if (!input.location) {
     errors.push({ field: "location", message: "Location is required" });
   } else {
-    if (!input.location.latitude || !input.location.longitude) {
+    // Coordinates are optional - backend can geocode from address if needed
+    if (!input.location.city) {
       errors.push({
-        field: "location",
-        message: "Valid coordinates are required",
+        field: "location.city",
+        message: "City is required",
+      });
+    }
+    if (!input.location.state) {
+      errors.push({
+        field: "location.state",
+        message: "State is required",
+      });
+    }
+    if (!input.location.zipCode) {
+      errors.push({
+        field: "location.zipCode",
+        message: "Zip code is required",
       });
     }
   }
 
-  // Availability dates validation
-  const availError = validateArray(
-    input.availabilityDates,
-    "Availability dates",
-    1
-  );
-  if (availError) {
-    errors.push(availError);
-  } else {
+  // Availability dates are optional - can be managed separately
+  if (input.availabilityDates && input.availabilityDates.length > 0) {
     input.availabilityDates.forEach((range, index) => {
       const rangeErrors = validateDateRange(range.startDate, range.endDate);
       rangeErrors.forEach((err) => {

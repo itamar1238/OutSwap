@@ -58,6 +58,45 @@ router.post("/search", async (req: Request, res: Response) => {
     const limit = params.limit || 20;
     const skip = (page - 1) * limit;
 
+    // Beautiful logging
+    console.log("\x1b[36m╔════════════════════════════════════════╗\x1b[0m");
+    console.log(
+      "\x1b[36m║\x1b[0m      \x1b[1m🔍 OUTFIT SEARCH REQUEST\x1b[0m       \x1b[36m║\x1b[0m"
+    );
+    console.log("\x1b[36m╠════════════════════════════════════════╣\x1b[0m");
+    if (params.query) {
+      console.log(
+        `\x1b[36m║\x1b[0m \x1b[33m📝 Query:\x1b[0m ${params.query.padEnd(
+          27
+        )} \x1b[36m║\x1b[0m`
+      );
+    }
+    if (params.category) {
+      console.log(
+        `\x1b[36m║\x1b[0m \x1b[35m📂 Category:\x1b[0m ${params.category.padEnd(
+          24
+        )} \x1b[36m║\x1b[0m`
+      );
+    }
+    if (params.size) {
+      console.log(
+        `\x1b[36m║\x1b[0m \x1b[34m👕 Size:\x1b[0m ${params.size.padEnd(
+          28
+        )} \x1b[36m║\x1b[0m`
+      );
+    }
+    console.log(
+      `\x1b[36m║\x1b[0m \x1b[32m📊 Sort:\x1b[0m ${params.sortBy.padEnd(
+        28
+      )} \x1b[36m║\x1b[0m`
+    );
+    console.log(
+      `\x1b[36m║\x1b[0m \x1b[90m📄 Page:\x1b[0m ${page
+        .toString()
+        .padEnd(28)} \x1b[36m║\x1b[0m`
+    );
+    console.log("\x1b[36m╚════════════════════════════════════════╝\x1b[0m");
+
     const query: any = { available: true };
 
     // Text search
@@ -86,19 +125,6 @@ router.post("/search", async (req: Request, res: Response) => {
       }
     }
 
-    // Location/proximity filter
-    if (params.location?.coordinates && params.radius) {
-      query["location.coordinates"] = {
-        $near: {
-          $geometry: {
-            type: "Point",
-            coordinates: params.location.coordinates,
-          },
-          $maxDistance: params.radius,
-        },
-      };
-    }
-
     // Build sort
     let sort: any = {};
     switch (params.sortBy) {
@@ -114,23 +140,19 @@ router.post("/search", async (req: Request, res: Response) => {
       case "newest":
         sort.createdAt = -1;
         break;
-      case "proximity":
-        // Proximity sorting is handled by $near in query
-        break;
       default:
         sort.createdAt = -1;
     }
 
-    const [outfits, total] = await Promise.all([
-      db
-        .collection("outfits")
-        .find(query)
-        .sort(sort)
-        .skip(skip)
-        .limit(limit)
-        .toArray(),
-      db.collection("outfits").countDocuments(query),
-    ]);
+    const outfits = await db
+      .collection("outfits")
+      .find(query)
+      .sort(sort)
+      .skip(skip)
+      .limit(limit)
+      .toArray();
+
+    const total = await db.collection("outfits").countDocuments(query);
 
     // Add id field for frontend compatibility
     const outfitsWithId = outfits.map((outfit) => ({
@@ -138,7 +160,7 @@ router.post("/search", async (req: Request, res: Response) => {
       id: outfit._id.toString(),
     }));
 
-    res.json({
+    const response = {
       success: true,
       data: {
         data: outfitsWithId,
@@ -147,13 +169,51 @@ router.post("/search", async (req: Request, res: Response) => {
         limit,
         totalPages: Math.ceil(total / limit),
       },
-    });
+    };
+
+    console.log("\x1b[32m╔════════════════════════════════════════╗\x1b[0m");
+    console.log(
+      "\x1b[32m║\x1b[0m        \x1b[1m✨ SEARCH SUCCESS\x1b[0m           \x1b[32m║\x1b[0m"
+    );
+    console.log("\x1b[32m╠════════════════════════════════════════╣\x1b[0m");
+    console.log(
+      `\x1b[32m║\x1b[0m \x1b[33m📦 Total Found:\x1b[0m ${total
+        .toString()
+        .padEnd(22)} \x1b[32m║\x1b[0m`
+    );
+    console.log(
+      `\x1b[32m║\x1b[0m \x1b[36m📤 Returned:\x1b[0m ${outfitsWithId.length
+        .toString()
+        .padEnd(25)} \x1b[32m║\x1b[0m`
+    );
+    console.log(
+      `\x1b[32m║\x1b[0m \x1b[35m📑 Pages:\x1b[0m ${Math.ceil(total / limit)
+        .toString()
+        .padEnd(28)} \x1b[32m║\x1b[0m`
+    );
+    console.log("\x1b[32m╚════════════════════════════════════════╝\x1b[0m");
+
+    res.json(response);
   } catch (error) {
-    console.error("Search outfits error:", error);
-    res.status(500).json({
+    console.log("\x1b[31m╔════════════════════════════════════════╗\x1b[0m");
+    console.log(
+      "\x1b[31m║\x1b[0m         \x1b[1m❌ SEARCH ERROR\x1b[0m            \x1b[31m║\x1b[0m"
+    );
+    console.log("\x1b[31m╠════════════════════════════════════════╣\x1b[0m");
+    console.log(
+      `\x1b[31m║\x1b[0m ${
+        error instanceof Error
+          ? error.message.substring(0, 38).padEnd(38)
+          : "Unknown error".padEnd(38)
+      } \x1b[31m║\x1b[0m`
+    );
+    console.log("\x1b[31m╚════════════════════════════════════════╝\x1b[0m");
+
+    const errorResponse = {
       success: false,
       error: "Failed to search outfits",
-    });
+    };
+    res.status(500).json(errorResponse);
   }
 });
 

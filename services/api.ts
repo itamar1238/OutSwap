@@ -113,37 +113,10 @@ export const OutfitAPI = {
   async search(
     params: OutfitSearchParams
   ): Promise<ApiResponse<PaginatedResponse<Outfit>>> {
-    const queryParams = new URLSearchParams();
-
-    // Add all search parameters to query string
-    if (params.location) {
-      queryParams.append("lat", params.location.latitude.toString());
-      queryParams.append("lng", params.location.longitude.toString());
-    }
-    if (params.radiusKm)
-      queryParams.append("radius", params.radiusKm.toString());
-    if (params.category) queryParams.append("category", params.category);
-    if (params.size) queryParams.append("size", params.size);
-    if (params.styleTags)
-      queryParams.append("styles", params.styleTags.join(","));
-    if (params.minPrice)
-      queryParams.append("minPrice", params.minPrice.toString());
-    if (params.maxPrice)
-      queryParams.append("maxPrice", params.maxPrice.toString());
-    if (params.priceType) queryParams.append("priceType", params.priceType);
-    if (params.startDate)
-      queryParams.append("startDate", params.startDate.toISOString());
-    if (params.endDate)
-      queryParams.append("endDate", params.endDate.toISOString());
-    if (params.minRating)
-      queryParams.append("minRating", params.minRating.toString());
-    if (params.sortBy) queryParams.append("sortBy", params.sortBy);
-    if (params.page) queryParams.append("page", params.page.toString());
-    if (params.limit) queryParams.append("limit", params.limit.toString());
-
-    return apiRequest<PaginatedResponse<Outfit>>(
-      `/outfits/search?${queryParams.toString()}`
-    );
+    return apiRequest<PaginatedResponse<Outfit>>("/outfits/search", {
+      method: "POST",
+      body: JSON.stringify(params),
+    });
   },
 
   /**

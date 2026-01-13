@@ -19,9 +19,22 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Request logging
+// Request logging with colors
 app.use((req: Request, res: Response, next: NextFunction) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+  const method = req.method.padEnd(6);
+  const methodColors: { [key: string]: string } = {
+    GET: "\x1b[32m", // Green
+    POST: "\x1b[33m", // Yellow
+    PUT: "\x1b[34m", // Blue
+    DELETE: "\x1b[31m", // Red
+  };
+  const color = methodColors[req.method] || "\x1b[37m";
+  const reset = "\x1b[0m";
+  const timestamp = new Date().toLocaleTimeString("en-US", { hour12: false });
+
+  console.log(
+    `\x1b[90m${timestamp}${reset} ${color}${method}${reset} ${req.path}`
+  );
   next();
 });
 

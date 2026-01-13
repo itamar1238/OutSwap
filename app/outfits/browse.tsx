@@ -24,7 +24,7 @@ import {
 import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -43,6 +43,8 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 export default function BrowseOutfitsScreen() {
+  const searchParams = useLocalSearchParams<{ category?: OutfitCategory }>();
+
   let [fontsLoaded] = useFonts({
     CormorantGaramond_600SemiBold,
     CormorantGaramond_500Medium,
@@ -57,37 +59,42 @@ export default function BrowseOutfitsScreen() {
   const [showFilters, setShowFilters] = useState(false);
 
   const [filters, setFilters] = useState<OutfitSearchParams>({
-    radiusKm: 10,
-    sortBy: "proximity",
+    sortBy: "newest",
     page: 1,
     limit: 20,
+    category: searchParams.category, // Initialize with category from URL
   });
 
   useEffect(() => {
     searchOutfits();
   }, [filters]);
 
+  // Search when user stops typing
+  useEffect(() => {
+    const delaySearch = setTimeout(() => {
+      if (searchQuery !== filters.query) {
+        searchOutfits();
+      }
+    }, 500);
+
+    return () => clearTimeout(delaySearch);
+  }, [searchQuery]);
+
   const searchOutfits = async () => {
     setLoading(true);
 
     try {
-      const userLocation = {
-        latitude: 37.7749,
-        longitude: -122.4194,
-        address: "",
-        city: "San Francisco",
-        state: "CA",
-        zipCode: "",
-        country: "USA",
+      const searchParams: OutfitSearchParams = {
+        ...filters,
+        query: searchQuery || undefined,
       };
 
-      const response = await OutfitAPI.search({
-        ...filters,
-        location: userLocation,
-      });
+      const response = await OutfitAPI.search(searchParams);
 
       if (response.success && response.data) {
         setOutfits(response.data.data);
+      } else {
+        console.error("Search failed:", response.error);
       }
     } catch (error) {
       console.error("Search error:", error);
@@ -102,8 +109,7 @@ export default function BrowseOutfitsScreen() {
 
   const clearFilters = () => {
     setFilters({
-      radiusKm: 10,
-      sortBy: "proximity",
+      sortBy: "newest",
       page: 1,
       limit: 20,
     });
@@ -212,7 +218,7 @@ export default function BrowseOutfitsScreen() {
       >
         {(
           [
-            { value: "proximity", label: "Nearest" },
+            { value: "newest", label: "Newest" },
             { value: "price-low", label: "Low Price" },
             { value: "price-high", label: "High Price" },
             { value: "rating-high", label: "Top Rated" },

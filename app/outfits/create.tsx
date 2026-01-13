@@ -93,7 +93,20 @@ export default function CreateOutfitScreen() {
   };
 
   const handleSubmit = async () => {
-    const validation = validateOutfitInput(formData);
+    // Add default coordinates if not set (center of US)
+    const outfitData = {
+      ...formData,
+      location: {
+        ...formData.location,
+        // Use default coordinates if not provided (can be enhanced with geocoding later)
+        latitude: formData.location.latitude || 39.8283,
+        longitude: formData.location.longitude || -98.5795,
+      },
+      // Ensure availability dates is always an array
+      availabilityDates: formData.availabilityDates || [],
+    };
+
+    const validation = validateOutfitInput(outfitData);
     if (!validation.isValid) {
       Alert.alert(
         "Validation Error",
@@ -106,7 +119,7 @@ export default function CreateOutfitScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
-      const response = await OutfitAPI.create(formData);
+      const response = await OutfitAPI.create(outfitData);
       if (response.success) {
         Alert.alert("Success", "Outfit created successfully!", [
           { text: "OK", onPress: () => router.back() },
