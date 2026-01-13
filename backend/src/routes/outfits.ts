@@ -97,11 +97,25 @@ router.post("/search", async (req: Request, res: Response) => {
     );
     console.log("\x1b[36m╚════════════════════════════════════════╝\x1b[0m");
 
-    const query: any = { available: true };
+    let query: any = { available: true };
+    let useRelevanceSort = false;
 
-    // Text search
-    if (params.query) {
-      query.$text = { $search: params.query };
+    // Smart search with relevance scoring
+    if (params.query && params.query.trim()) {
+      const searchTerm = params.query.trim();
+      const titleRegex = new RegExp(searchTerm, "i"); // substring match in title
+      const wordBoundaryRegex = new RegExp(`\\b${searchTerm}\\b`, "i"); // whole word match
+
+      query.$or = [
+        { title: titleRegex }, // Match anywhere in title
+        { styleTags: { $in: [titleRegex] } }, // Match in style tags
+        { description: wordBoundaryRegex }, // Only whole word matches in description
+      ];
+
+      // Use relevance-based sorting when searching
+      useRelevanceSort = !params.sortBy || params.sortBy === "newest";
+
+      console.log(`\x1b[33mApplying smart search for: "${searchTerm}"\x1b[0m`);
     }
 
     // Category filter
@@ -125,34 +139,94 @@ router.post("/search", async (req: Request, res: Response) => {
       }
     }
 
-    // Build sort
-    let sort: any = {};
-    switch (params.sortBy) {
-      case "price-low":
-        sort.pricePerDay = 1;
-        break;
-      case "price-high":
-        sort.pricePerDay = -1;
-        break;
-      case "rating-high":
-        sort.rating = -1;
-        break;
-      case "newest":
-        sort.createdAt = -1;
-        break;
-      default:
-        sort.createdAt = -1;
+    let outfits: any[];
+    let total: number;
+
+    // If using search with relevance, fetch all matching results and sort by relevance
+    if (useRelevanceSort && params.query) {
+      const searchTerm = params.query.trim().toLowerCase();
+
+      // Get all matching outfits (before pagination)
+      const allMatching = await db.collection("outfits").find(query).toArray();
+
+      // Calculate relevance score for each outfit
+      const scoredOutfits = allMatching.map((outfit: any) => {
+        let score = 0;
+        const title = (outfit.title || "").toLowerCase();
+        const description = (outfit.description || "").toLowerCase();
+        const tags = (outfit.styleTags || []).map((t: string) =>
+          t.toLowerCase()
+        );
+
+        // Exact title match (highest score)
+        if (title === searchTerm) {
+          score += 100;
+        }
+        // Title starts with search term
+        else if (title.startsWith(searchTerm)) {
+          score += 50;
+        }
+        // Title contains search term
+        else if (title.includes(searchTerm)) {
+          score += 30;
+        }
+
+        // Exact tag match
+        if (tags.some((tag: string) => tag === searchTerm)) {
+          score += 40;
+        }
+        // Tag contains search term
+        else if (tags.some((tag: string) => tag.includes(searchTerm))) {
+          score += 20;
+        }
+
+        // Whole word in description (lowest priority)
+        const wordRegex = new RegExp(`\\b${searchTerm}\\b`, "i");
+        if (wordRegex.test(description)) {
+          score += 5;
+        }
+
+        return { ...outfit, _relevanceScore: score };
+      });
+
+      // Sort by relevance score
+      scoredOutfits.sort((a, b) => b._relevanceScore - a._relevanceScore);
+
+      // Apply pagination
+      total = scoredOutfits.length;
+      outfits = scoredOutfits.slice(skip, skip + limit);
+
+      console.log(`\x1b[32mRelevance sorting: Found ${total} matches\x1b[0m`);
+    } else {
+      // Regular sorting (price, rating, newest)
+      let sort: any = {};
+      switch (params.sortBy) {
+        case "price-low":
+          sort.pricePerDay = 1;
+          break;
+        case "price-high":
+          sort.pricePerDay = -1;
+          break;
+        case "rating-high":
+          sort.rating = -1;
+          break;
+        case "newest":
+          sort.createdAt = -1;
+          break;
+        default:
+          sort.createdAt = -1;
+      }
+
+      outfits = await db
+        .collection("outfits")
+        .find(query)
+        .sort(sort)
+        .skip(skip)
+        .limit(limit)
+        .toArray();
+
+      total = await db.collection("outfits").countDocuments(query);
     }
-
-    const outfits = await db
-      .collection("outfits")
-      .find(query)
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .toArray();
-
-    const total = await db.collection("outfits").countDocuments(query);
 
     // Add id field for frontend compatibility
     const outfitsWithId = outfits.map((outfit) => ({
