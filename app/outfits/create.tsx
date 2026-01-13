@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
     color: "#d4af37",
     marginLeft: -2,
   },
-  content: { padding: 24, paddingTop: 80 },
+  content: { padding: 24, paddingTop: 80, paddingBottom: 100 },
   title: {
     fontFamily: "CormorantGaramond_600SemiBold",
     fontSize: 40,

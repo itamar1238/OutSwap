@@ -15,6 +15,7 @@ import { router } from "expo-router";
 import { useEffect } from "react";
 import {
   Dimensions,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -80,91 +81,112 @@ export default function HomeScreen() {
         />
       </Animated.View>
 
-      {/* Hero Section */}
-      <Animated.View
-        entering={FadeInUp.duration(800).springify()}
-        style={styles.hero}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
       >
-        <Text style={styles.heroTitle}>OutSwap</Text>
-        <View style={styles.heroUnderline} />
-        <Text style={styles.heroSubtitle}>Curated Fashion Rental</Text>
-        <Text style={styles.heroTagline}>Sustainable. Local. Refined.</Text>
-      </Animated.View>
-
-      {/* Action Cards */}
-      <View style={styles.actionsContainer}>
-        <AnimatedTouchable
-          entering={FadeInDown.delay(200).duration(600).springify()}
-          onPress={() => handlePress("/outfits/browse")}
-          activeOpacity={0.9}
-          style={styles.primaryAction}
+        {/* Hero Section */}
+        <Animated.View
+          entering={FadeInUp.duration(800).springify()}
+          style={styles.hero}
         >
-          <BlurView intensity={40} tint="dark" style={styles.glassCard}>
-            <LinearGradient
-              colors={["rgba(212, 175, 55, 0.15)", "rgba(212, 175, 55, 0.05)"]}
-              style={styles.cardGradient}
+          <Text style={styles.heroTitle}>OutSwap</Text>
+          <View style={styles.heroUnderline} />
+          <Text style={styles.heroSubtitle}>Curated Fashion Rental</Text>
+          <Text style={styles.heroTagline}>Sustainable. Local. Refined.</Text>
+        </Animated.View>
+
+        {/* Action Cards */}
+        <View style={styles.actionsContainer}>
+          <AnimatedTouchable
+            entering={FadeInDown.delay(200).duration(600).springify()}
+            onPress={() => handlePress("/outfits/browse")}
+            activeOpacity={0.9}
+            style={styles.primaryAction}
+          >
+            <BlurView intensity={40} tint="dark" style={styles.glassCard}>
+              <LinearGradient
+                colors={[
+                  "rgba(212, 175, 55, 0.15)",
+                  "rgba(212, 175, 55, 0.05)",
+                ]}
+                style={styles.cardGradient}
+              >
+                <View style={styles.cardIcon}>
+                  <Text style={styles.cardIconText}>✦</Text>
+                </View>
+                <Text style={styles.primaryCardTitle}>Discover</Text>
+                <Text style={styles.primaryCardSubtitle}>
+                  Browse curated outfits from your community
+                </Text>
+              </LinearGradient>
+            </BlurView>
+          </AnimatedTouchable>
+
+          <View style={styles.secondaryActions}>
+            <AnimatedTouchable
+              entering={FadeInDown.delay(400).duration(600).springify()}
+              onPress={() => handlePress("/outfits/create")}
+              activeOpacity={0.9}
+              style={styles.secondaryAction}
             >
-              <View style={styles.cardIcon}>
-                <Text style={styles.cardIconText}>✦</Text>
-              </View>
-              <Text style={styles.primaryCardTitle}>Discover</Text>
-              <Text style={styles.primaryCardSubtitle}>
-                Browse curated outfits from your community
-              </Text>
-            </LinearGradient>
-          </BlurView>
-        </AnimatedTouchable>
+              <BlurView
+                intensity={30}
+                tint="dark"
+                style={styles.glassCardSmall}
+              >
+                <View style={styles.cardIconSmall}>
+                  <Text style={styles.cardIconTextSmall}>+</Text>
+                </View>
+                <Text style={styles.secondaryCardTitle}>List</Text>
+                <Text style={styles.secondaryCardSubtitle}>
+                  Share your wardrobe
+                </Text>
+              </BlurView>
+            </AnimatedTouchable>
 
-        <View style={styles.secondaryActions}>
-          <AnimatedTouchable
-            entering={FadeInDown.delay(400).duration(600).springify()}
-            onPress={() => handlePress("/outfits/create")}
-            activeOpacity={0.9}
-            style={styles.secondaryAction}
-          >
-            <BlurView intensity={30} tint="dark" style={styles.glassCardSmall}>
-              <View style={styles.cardIconSmall}>
-                <Text style={styles.cardIconTextSmall}>+</Text>
-              </View>
-              <Text style={styles.secondaryCardTitle}>List</Text>
-              <Text style={styles.secondaryCardSubtitle}>
-                Share your wardrobe
-              </Text>
-            </BlurView>
-          </AnimatedTouchable>
-
-          <AnimatedTouchable
-            entering={FadeInDown.delay(600).duration(600).springify()}
-            onPress={() => handlePress("/rentals")}
-            activeOpacity={0.9}
-            style={styles.secondaryAction}
-          >
-            <BlurView intensity={30} tint="dark" style={styles.glassCardSmall}>
-              <View style={styles.cardIconSmall}>
-                <Text style={styles.cardIconTextSmall}>◈</Text>
-              </View>
-              <Text style={styles.secondaryCardTitle}>Rentals</Text>
-              <Text style={styles.secondaryCardSubtitle}>Manage bookings</Text>
-            </BlurView>
-          </AnimatedTouchable>
+            <AnimatedTouchable
+              entering={FadeInDown.delay(600).duration(600).springify()}
+              onPress={() => handlePress("/rentals")}
+              activeOpacity={0.9}
+              style={styles.secondaryAction}
+            >
+              <BlurView
+                intensity={30}
+                tint="dark"
+                style={styles.glassCardSmall}
+              >
+                <View style={styles.cardIconSmall}>
+                  <Text style={styles.cardIconTextSmall}>◈</Text>
+                </View>
+                <Text style={styles.secondaryCardTitle}>Rentals</Text>
+                <Text style={styles.secondaryCardSubtitle}>
+                  Manage bookings
+                </Text>
+              </BlurView>
+            </AnimatedTouchable>
+          </View>
         </View>
-      </View>
 
-      {/* Feature Pills */}
-      <Animated.View
-        entering={FadeInUp.delay(800).duration(600)}
-        style={styles.features}
-      >
-        <BlurView intensity={20} tint="dark" style={styles.featurePill}>
-          <Text style={styles.featureText}>Sustainable Fashion</Text>
-        </BlurView>
-        <BlurView intensity={20} tint="dark" style={styles.featurePill}>
-          <Text style={styles.featureText}>Verified Community</Text>
-        </BlurView>
-        <BlurView intensity={20} tint="dark" style={styles.featurePill}>
-          <Text style={styles.featureText}>Insured Rentals</Text>
-        </BlurView>
-      </Animated.View>
+        {/* Feature Pills */}
+        <Animated.View
+          entering={FadeInUp.delay(800).duration(600)}
+          style={styles.features}
+        >
+          <BlurView intensity={20} tint="dark" style={styles.featurePill}>
+            <Text style={styles.featureText}>Sustainable Fashion</Text>
+          </BlurView>
+          <BlurView intensity={20} tint="dark" style={styles.featurePill}>
+            <Text style={styles.featureText}>Verified Community</Text>
+          </BlurView>
+          <BlurView intensity={20} tint="dark" style={styles.featurePill}>
+            <Text style={styles.featureText}>Insured Rentals</Text>
+          </BlurView>
+          <BlurView intensity={20} tint="dark" style={styles.featurePill}>
+            <Text style={styles.featureText}>Local Exchange</Text>
+          </BlurView>
+        </Animated.View>
+      </ScrollView>
     </View>
   );
 }
@@ -173,6 +195,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#1a0a0f",
+  },
+  scrollContent: {
+    paddingBottom: 120,
   },
   accentShimmer: {
     position: "absolute",
@@ -183,14 +208,14 @@ const styles = StyleSheet.create({
     borderRadius: 150,
   },
   hero: {
-    paddingTop: 120,
+    paddingTop: 80,
     paddingHorizontal: 32,
     alignItems: "center",
-    marginBottom: 60,
+    marginBottom: 40,
   },
   heroTitle: {
     fontFamily: "CormorantGaramond_600SemiBold",
-    fontSize: 72,
+    fontSize: 56,
     color: "#f5f1e8",
     letterSpacing: 2,
     textTransform: "uppercase",
@@ -314,17 +339,21 @@ const styles = StyleSheet.create({
   features: {
     flexDirection: "row",
     flexWrap: "wrap",
+    justifyContent: "center",
     paddingHorizontal: 24,
     paddingTop: 32,
-    gap: 10,
+    paddingBottom: 20,
+    gap: 12,
   },
   featurePill: {
+    width: "47%",
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: "rgba(245, 241, 232, 0.1)",
     overflow: "hidden",
+    alignItems: "center",
   },
   featureText: {
     fontFamily: "Montserrat_500Medium",

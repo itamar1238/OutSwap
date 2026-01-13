@@ -54,26 +54,32 @@ export default function BrowseOutfitsScreen() {
   });
 
   const [outfits, setOutfits] = useState<Outfit[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const isInitialMount = React.useRef(true);
 
   const [filters, setFilters] = useState<OutfitSearchParams>({
     sortBy: "newest",
     page: 1,
     limit: 20,
-    category: searchParams.category, // Initialize with category from URL
+    category: searchParams.category,
   });
 
   useEffect(() => {
     searchOutfits();
   }, [filters]);
 
-  // Search when user stops typing
+  // Search when user stops typing (but skip on initial mount)
   useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
     const delaySearch = setTimeout(() => {
       if (searchQuery !== filters.query) {
-        searchOutfits();
+        setFilters((prev) => ({ ...prev, query: searchQuery || undefined }));
       }
     }, 500);
 
@@ -82,7 +88,6 @@ export default function BrowseOutfitsScreen() {
 
   const searchOutfits = async () => {
     setLoading(true);
-
     try {
       const searchParams: OutfitSearchParams = {
         ...filters,
